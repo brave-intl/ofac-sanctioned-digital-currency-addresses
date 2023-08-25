@@ -23,7 +23,7 @@ jobs:
       with:
         python-version: 3.9
     - name: Download the sdn_advanced.xml file
-      uses: wei/wget@v1
+      uses: wei/wget@c15e476d1463f4936cb54f882170d9d631f1aba5 # v1
       with:
         args: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
     - name: Generate TXT and JSON files for all assets
@@ -39,7 +39,7 @@ jobs:
         git add sanctioned_addresses_* -f
         git commit -m "Automatically updated lists: $(date)" -a || true
     - name: Push changes
-      uses: ad-m/github-push-action@master
+      uses: ad-m/github-push-action@9a2e3c14aaecf56d5816dc3a54514f82050820b2 # master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: lists
