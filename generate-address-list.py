@@ -11,7 +11,8 @@ NAMESPACE = {'sdn': 'http://www.un.org/sanctions/1.0'}
 # List of assets that have been sanctioned by the OFAC.
 # Possible assets be seen by grepping the sdn_advanced.xml file for "Digital Currency Address".
 POSSIBLE_ASSETS = ["XBT", "ETH", "XMR", "LTC", "ZEC", "DASH", "BTG", "ETC",
-                   "BSV", "BCH", "XVG", "USDT", "XRP", "ARB", "BSC"]
+                   "BSV", "BCH", "XVG", "USDT", "XRP", "ARB", "BSC", "USDC",
+                   "TRX"]
 
 # List of implemented output formats
 OUTPUT_FORMATS = ["TXT", "JSON"]
@@ -22,7 +23,7 @@ def parse_arguments():
         description='Tool to extract sanctioned digital currency addresses from the OFAC special designated nationals XML file (sdn_advanced.xml)')
     parser.add_argument('assets', choices=POSSIBLE_ASSETS, nargs='*',
                         default=POSSIBLE_ASSETS[0], help='the asset for which the sanctioned addresses should be extracted (default: XBT (Bitcoin))')
-    parser.add_argument('-sdn', '--special-designated-nationals-list', dest='sdn', type=open,
+    parser.add_argument('-sdn', '--special-designated-nationals-list', dest='sdn', type=argparse.FileType('rb'),
                         help='the path to the sdn_advanced.xml file (can be downloaded from https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)', default="./sdn_advanced.xml")
     parser.add_argument('-f', '--output-format',  dest='format', nargs='*', choices=OUTPUT_FORMATS,
                         default=OUTPUT_FORMATS[0], help='the output file format of the address list (default: TXT)')
