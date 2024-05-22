@@ -5,6 +5,7 @@ import argparse
 import pathlib
 import json
 import hashlib
+from ofac_scraper import OfacWebsiteScraper
 
 FEATURE_TYPE_TEXT = "Digital Currency Address - "
 NAMESPACE = {'sdn': 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML'}
@@ -93,13 +94,23 @@ def compute_sha256(file_path):
             sha256_hash.update(chunk)
     return sha256_hash.hexdigest()
 
-def write_checksum_file(file_path, checksum_file_path):
+def write_checksum_file(sha256, checksum_file_path):
     with open(checksum_file_path, "w") as checksum_file:
-        sha256 = compute_sha256(file_path)
         checksum_file.write(f"SHA256({file_path}) = {sha256}\n")
 
 def main():
     args = parse_arguments()
+
+    # First, check if the checksum matches the one on the website
+    scraper = OfacWebsiteScraper()
+    try:
+        sha256_checksum_from_site = scraper.get_sha256_checksum()
+    finally:
+        scraper.close()
+
+    sha256_checksum_computed = compute_sha256(SDN_ADVANCED_FILE_PATH)
+    if sha256_checksum_computed != sha256_checksum_from_site:
+        return
 
     tree = ET.parse(args.sdn)
     root = tree.getroot()
@@ -130,8 +141,7 @@ def main():
 
         write_addresses(addresses, asset, output_formats, args.outpath)
 
-    # Update checksum
-    write_checksum_file(SDN_ADVANCED_FILE_PATH, "data/sdn_advanced_checksum.txt")
+    write_checksum_file(sdn_checksum_from_site, "data/sdn_advanced_checksum.txt")
 
 if __name__ == "__main__":
     main()
