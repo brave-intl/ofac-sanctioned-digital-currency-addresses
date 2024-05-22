@@ -21,8 +21,8 @@ OUTPUT_FORMATS = ["TXT", "JSON"]
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='Tool to extract sanctioned digital currency addresses from the OFAC special designated nationals XML file (sdn_advanced.xml)')
-    parser.add_argument('assets', choices=POSSIBLE_ASSETS, nargs='*',
-                        default=POSSIBLE_ASSETS[0], help='the asset for which the sanctioned addresses should be extracted (default: XBT (Bitcoin))')
+    parser.add_argument('assets', nargs='*',
+                        default=[], help='the asset for which the sanctioned addresses should be extracted (default: XBT (Bitcoin))')
     parser.add_argument('-sdn', '--special-designated-nationals-list', dest='sdn', type=argparse.FileType('rb'),
                         help='the path to the sdn_advanced.xml file (can be downloaded from https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)', default="./sdn_advanced.xml")
     parser.add_argument('-f', '--output-format',  dest='format', nargs='*', choices=OUTPUT_FORMATS,
@@ -31,11 +31,21 @@ def parse_arguments():
         "./"), help='the path where the lists should be written to (default: current working directory ("./")')
     return parser.parse_args()
 
-
 def feature_type_text(asset):
     """returns text we expect in a <FeatureType></FeatureType> tag for a given asset"""
     return "Digital Currency Address - " + asset
 
+def get_possible_assets(root):
+    """
+    Returns a list of possible digital currency assets from the parsed XML.
+    """
+    assets = []
+    feature_types = root.findall('sdn:ReferenceValueSets/sdn:FeatureTypeValues/sdn:FeatureType', NAMESPACE)
+    for feature_type in feature_types:
+        if feature_type.text.startswith('Digital Currency Address - '):
+            asset = feature_type.text.replace('Digital Currency Address - ', '')
+            assets.append(asset)
+    return assets
 
 def get_address_id(root, asset):
     """returns the feature id of the given asset"""
@@ -86,6 +96,9 @@ def main():
         assets.append(args.assets)
     else:
         assets = args.assets
+
+    if len(assets) == 0:
+        assets = get_possible_assets(root)
 
     output_formats = list()
     if type(args.format) == str:
