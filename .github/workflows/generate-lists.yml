@@ -36,6 +36,15 @@ jobs:
         git config --local user.name "github-actions[bot]"
         git checkout lists
         mv data/* .
+        # If the sanctioned addresses have been updated, or if there is no checksum
+        # or XML bzip file, bzip the file and check it into git along with the checksum.
+        if git status sanctioned_addresses_* --porcelain | grep -q '^ M' || \
+           [ ! -f sdn_advanced_checksum.txt ] || \
+           [ ! -f sdn_advanced.xml.bz2 ]; then
+          bzip2 -9 sdn_advanced.xml
+          git add sdn_advanced_checksum.txt
+          git add sdn_advanced.xml.bz2
+        fi
         git add sanctioned_addresses_* -f
         git commit -m "Automatically updated lists: $(date)" -a || true
     - name: Push changes

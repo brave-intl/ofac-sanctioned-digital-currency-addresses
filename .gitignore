@@ -130,3 +130,5 @@ dmypy.json
 
 sanctioned_addresses_*
 sdn_advanced.xml
+sdn_advanced.xml.bz2
+sdn_advanced_checksum.txt

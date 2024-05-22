@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import argparse
 import pathlib
 import json
+import hashlib
 
 FEATURE_TYPE_TEXT = "Digital Currency Address - "
 NAMESPACE = {'sdn': 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML'}
@@ -17,6 +18,7 @@ POSSIBLE_ASSETS = ["XBT", "ETH", "XMR", "LTC", "ZEC", "DASH", "BTG", "ETC",
 # List of implemented output formats
 OUTPUT_FORMATS = ["TXT", "JSON"]
 
+SDN_ADVANCED_FILE_PATH = "sdn_advanced.xml"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -24,7 +26,7 @@ def parse_arguments():
     parser.add_argument('assets', nargs='*',
                         default=[], help='the asset for which the sanctioned addresses should be extracted (default: XBT (Bitcoin))')
     parser.add_argument('-sdn', '--special-designated-nationals-list', dest='sdn', type=argparse.FileType('rb'),
-                        help='the path to the sdn_advanced.xml file (can be downloaded from https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)', default="./sdn_advanced.xml")
+                        help='the path to the sdn_advanced.xml file (can be downloaded from https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)', default=SDN_ADVANCED_FILE_PATH)
     parser.add_argument('-f', '--output-format',  dest='format', nargs='*', choices=OUTPUT_FORMATS,
                         default=OUTPUT_FORMATS[0], help='the output file format of the address list (default: TXT)')
     parser.add_argument('-path', '--output-path', dest='outpath',  type=pathlib.Path, default=pathlib.Path(
@@ -84,6 +86,17 @@ def write_addresses_json(addresses, asset, outpath):
     with open("{}/sanctioned_addresses_{}.json".format(outpath, asset), 'w') as out:
         out.write(json.dumps(addresses, indent=2)+"\n")
 
+def compute_sha256(file_path):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest()
+
+def write_checksum_file(file_path, checksum_file_path):
+    with open(checksum_file_path, "w") as checksum_file:
+        sha256 = compute_sha256(file_path)
+        checksum_file.write(f"SHA256({file_path}) = {sha256}\n")
 
 def main():
     args = parse_arguments()
@@ -117,6 +130,8 @@ def main():
 
         write_addresses(addresses, asset, output_formats, args.outpath)
 
+    # Update checksum
+    write_checksum_file(SDN_ADVANCED_FILE_PATH, "data/sdn_advanced_checksum.txt")
 
 if __name__ == "__main__":
     main()
