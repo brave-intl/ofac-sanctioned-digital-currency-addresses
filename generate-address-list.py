@@ -110,7 +110,7 @@ def main():
 
     sha256_checksum_computed = compute_sha256(SDN_ADVANCED_FILE_PATH)
     if sha256_checksum_computed != sha256_checksum_from_site:
-        return
+        raise "Checksums do not match."
 
     tree = ET.parse(args.sdn)
     root = tree.getroot()
