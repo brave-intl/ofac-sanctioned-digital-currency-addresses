@@ -67,7 +67,7 @@ jobs:
     if: failure()
     steps:
       - name: Notify Slack of failure
-        uses: 8398a7/action-slack@v3
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # https://github.com/8398a7/action-slack/releases/tag/v3.16.2
         with:
           status: failure
           custom_payload: |
