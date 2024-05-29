@@ -49,7 +49,7 @@ jobs:
         if git status sanctioned_addresses_* --porcelain | grep -q '^ M' || \
            [ ! -f sdn_advanced_checksum.txt ] || \
            [ ! -f sdn_advanced.xml.bz2 ]; then
-          bzip2 -9 sdn_advanced.xml
+          bzip2 -9f sdn_advanced.xml  # Force overwrite if the file exists
           git add sdn_advanced_checksum.txt
           git add sdn_advanced.xml.bz2
         fi
