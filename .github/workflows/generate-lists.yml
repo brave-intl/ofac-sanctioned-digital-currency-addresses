@@ -60,3 +60,22 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: lists
+
+  failure-notification:
+    runs-on: ubuntu-latest
+    needs: generate-lists
+    if: failure()
+    steps:
+      - name: Notify Slack of failure
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          custom_payload: |
+            {
+              "channel": "#compliance-bot",
+              "username": "compliance-bot",
+              "text": "The OFAC sanctioned digital currency addresses list generation job has failed.",
+              "icon_emoji": ":x:"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

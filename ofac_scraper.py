@@ -53,6 +53,8 @@ class OfacWebsiteScraper:
         checksums_content = self.get_element_text(By.ID, "accordion__panel-raa-1")
         
         # Parse and return only the SHA-256 checksum
+        if 'SHA-256: ' not in checksums_content:
+            raise ValueError("SHA-256 checksum not found")
         sha256_checksum = checksums_content.split('SHA-256: ')[1].split('\n')[0]
         return sha256_checksum
 
