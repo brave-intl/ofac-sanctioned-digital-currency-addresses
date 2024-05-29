@@ -96,7 +96,7 @@ def compute_sha256(file_path):
 
 def write_checksum_file(sha256, checksum_file_path):
     with open(checksum_file_path, "w") as checksum_file:
-        checksum_file.write(f"SHA256({file_path}) = {sha256}\n")
+        checksum_file.write(f"SHA256({SDN_ADVANCED_FILE_PATH}) = {sha256}\n")
 
 def main():
     args = parse_arguments()
@@ -141,7 +141,7 @@ def main():
 
         write_addresses(addresses, asset, output_formats, args.outpath)
 
-    write_checksum_file(sdn_checksum_from_site, "data/sdn_advanced_checksum.txt")
+    write_checksum_file(sha256_checksum_from_site, "data/sdn_advanced_checksum.txt")
 
 if __name__ == "__main__":
     main()
