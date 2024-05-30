@@ -7,7 +7,6 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
-
 jobs:
   generate-lists:
 
@@ -22,6 +21,15 @@ jobs:
       uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5
       with:
         python-version: 3.11
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        pip install selenium webdriver-manager
     - name: Download the sdn_advanced.xml file
       uses: wei/wget@c15e476d1463f4936cb54f882170d9d631f1aba5 # v1
       with:
@@ -29,13 +37,22 @@ jobs:
     - name: Generate TXT and JSON files for all assets
       run: |
         mkdir data
-        python3 generate-address-list.py XBT ETH XMR LTC ZEC DASH BTG ETC BSV BCH XVG USDC USDT XRP TRX ARB BSC -f JSON TXT -path ./data
+        python3 generate-address-list.py -f JSON TXT -path ./data
     - name: Commit files
       run: |
         git config --local user.email "45324+github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git checkout lists
         mv data/* .
+        # If the sanctioned addresses have been updated, or if there is no checksum
+        # or XML bzip file, bzip the file and check it into git along with the checksum.
+        if git status sanctioned_addresses_* --porcelain | grep -q '^ M' || \
+           [ ! -f sdn_advanced_checksum.txt ] || \
+           [ ! -f sdn_advanced.xml.bz2 ]; then
+          bzip2 -9f sdn_advanced.xml  # Force overwrite if the file exists
+          git add sdn_advanced_checksum.txt
+          git add sdn_advanced.xml.bz2
+        fi
         git add sanctioned_addresses_* -f
         git commit -m "Automatically updated lists: $(date)" -a || true
     - name: Push changes
@@ -43,3 +60,22 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: lists
+
+  failure-notification:
+    runs-on: ubuntu-latest
+    needs: generate-lists
+    if: failure()
+    steps:
+      - name: Notify Slack of failure
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # https://github.com/8398a7/action-slack/releases/tag/v3.16.2
+        with:
+          status: failure
+          custom_payload: |
+            {
+              "channel": "#compliance-bot",
+              "username": "compliance-bot",
+              "text": "The OFAC sanctioned digital currency addresses list generation job has failed.",
+              "icon_emoji": ":x:"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
