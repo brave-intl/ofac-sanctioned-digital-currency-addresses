@@ -28,7 +28,7 @@ jobs:
         wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
         sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
         sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        sudo apt-get install -y google-chrome-stable chromium-chromedriver
         pip install selenium webdriver-manager
     - name: Download the sdn_advanced.xml file
       uses: wei/wget@c15e476d1463f4936cb54f882170d9d631f1aba5 # v1
