@@ -18,7 +18,7 @@ class OfacWebsiteScraper:
         chrome_options.add_argument("--disable-dev-shm-usage")
 
         # Automatically download and set up ChromeDriver
-        self.service = Service(ChromeDriverManager().install())
+        self.service = Service("/usr/bin/chromedriver")
         self.driver = webdriver.Chrome(service=self.service, options=chrome_options)
 
     def open_website(self, url):
