@@ -33,7 +33,7 @@ jobs:
     - name: Download the sdn_advanced.xml file
       uses: wei/wget@c15e476d1463f4936cb54f882170d9d631f1aba5 # v1
       with:
-        args: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
+        args: --tries=5 --wait=60 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
     - name: Generate TXT and JSON files for all assets
       run: |
         mkdir data
