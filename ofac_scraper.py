@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 class OfacWebsiteScraper:
     def __init__(self):
         # Set up Chrome options
@@ -37,13 +38,14 @@ class OfacWebsiteScraper:
     def get_element_text(self, by, value):
         return self.driver.find_element(by, value).text
 
-
     def get_sha256_checksum(self):
         MAX_RETRIES = 10
         RETRY_DELAY = 10  # seconds to wait before retrying
 
         for attempt in range(MAX_RETRIES):
-            print(f"Attempting to get SHA-256 checksum (attempt {attempt + 1}/{MAX_RETRIES})...")
+            print(
+                f"Attempting to get SHA-256 checksum (attempt {attempt + 1}/{MAX_RETRIES})..."
+            )
             try:
                 self.open_website("https://sanctionslist.ofac.treas.gov/Home/SdnList")
                 print("Website opened")
@@ -62,23 +64,30 @@ class OfacWebsiteScraper:
                 print("Checksums panel found")
 
                 # Extract the checksums content
-                checksums_content = self.get_element_text(By.ID, "accordion__panel-raa-1")
+                checksums_content = self.get_element_text(
+                    By.ID, "accordion__panel-raa-1"
+                )
                 print("Checksums content extracted")
 
                 # Parse and return only the SHA-256 checksum
-                if 'SHA-256: ' not in checksums_content:
+                if "SHA-256: " not in checksums_content:
                     raise ValueError("SHA-256 checksum not found")
-                sha256_checksum = checksums_content.split('SHA-256: ')[1].split('\n')[0]
+                sha256_checksum = checksums_content.split("SHA-256: ")[1].split("\n")[0]
                 return sha256_checksum
 
             except TimeoutException:
-                print(f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. Retrying in {RETRY_DELAY} seconds...")
+                print(
+                    f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. Retrying in {RETRY_DELAY} seconds..."
+                )
                 time.sleep(RETRY_DELAY)
                 if attempt == MAX_RETRIES - 1:
-                    raise TimeoutException("Max retries reached. The website is not responding.")
+                    raise TimeoutException(
+                        "Max retries reached. The website is not responding."
+                    )
 
     def close(self):
         self.driver.quit()
+
 
 if __name__ == "__main__":
     scraper = OfacWebsiteScraper()
