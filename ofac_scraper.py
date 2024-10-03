@@ -1,12 +1,14 @@
 import logging
 import time
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+
 
 class OfacWebsiteScraper:
     def __init__(self):
@@ -37,29 +39,55 @@ class OfacWebsiteScraper:
         return self.driver.find_element(by, value).text
 
     def get_sha256_checksum(self):
-        self.open_website("https://sanctionslist.ofac.treas.gov/Home/SdnList")
+        MAX_RETRIES = 10
+        RETRY_DELAY = 10  # seconds to wait before retrying
 
-        # Wait until the 'File Signatures' button with the known ID is present
-        self.wait_for_element(By.ID, "accordion__heading-raa-1")
+        for attempt in range(MAX_RETRIES):
+            print(
+                f"Attempting to get SHA-256 checksum (attempt {attempt + 1}/{MAX_RETRIES})..."
+            )
+            try:
+                self.open_website("https://sanctionslist.ofac.treas.gov/Home/SdnList")
+                print("Website opened")
 
-        # Click the 'File Signatures' button with the known ID
-        self.click_element(By.ID, "accordion__heading-raa-1")
+                # Wait until the 'File Signatures' button with the known ID is present
+                self.wait_for_element(By.ID, "accordion__heading-raa-1")
+                print("File Signatures button found")
 
-        # Wait for the checksums panel to be visible
-        self.wait_for_element(By.ID, "accordion__panel-raa-1")
-        time.sleep(3)
+                # Click the 'File Signatures' button with the known ID
+                self.click_element(By.ID, "accordion__heading-raa-1")
+                print("File Signatures button clicked")
 
-        # Extract the checksums content
-        checksums_content = self.get_element_text(By.ID, "accordion__panel-raa-1")
-        
-        # Parse and return only the SHA-256 checksum
-        if 'SHA-256: ' not in checksums_content:
-            raise ValueError("SHA-256 checksum not found")
-        sha256_checksum = checksums_content.split('SHA-256: ')[1].split('\n')[0]
-        return sha256_checksum
+                # Wait for the checksums panel to be visible
+                self.wait_for_element(By.ID, "accordion__panel-raa-1")
+                time.sleep(3)
+                print("Checksums panel found")
+
+                # Extract the checksums content
+                checksums_content = self.get_element_text(
+                    By.ID, "accordion__panel-raa-1"
+                )
+                print("Checksums content extracted")
+
+                # Parse and return only the SHA-256 checksum
+                if "SHA-256: " not in checksums_content:
+                    raise ValueError("SHA-256 checksum not found")
+                sha256_checksum = checksums_content.split("SHA-256: ")[1].split("\n")[0]
+                return sha256_checksum
+
+            except TimeoutException:
+                print(
+                    f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. Retrying in {RETRY_DELAY} seconds..."
+                )
+                time.sleep(RETRY_DELAY)
+                if attempt == MAX_RETRIES - 1:
+                    raise TimeoutException(
+                        "Max retries reached. The website is not responding."
+                    )
 
     def close(self):
         self.driver.quit()
+
 
 if __name__ == "__main__":
     scraper = OfacWebsiteScraper()
