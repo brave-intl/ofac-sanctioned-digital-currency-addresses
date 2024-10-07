@@ -32,7 +32,7 @@ jobs:
         pip install selenium webdriver-manager
     - name: Download the sdn_advanced.xml file
       run: |
-        wget --tries=5 --wait=60 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
+        wget --tries=5 --wait=60 --retry-on-http-error=403 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
     - name: Generate TXT and JSON files for all assets
       run: |
         mkdir data
