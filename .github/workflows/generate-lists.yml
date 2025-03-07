@@ -31,7 +31,7 @@ jobs:
         sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable chromium-chromedriver
-        pip install selenium webdriver-manager
+        pip install selenium webdriver-manager boto3
     - name: Download the sdn_advanced.xml file
       run: |
         wget --tries=5 --wait=60 --retry-on-http-error=403 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
