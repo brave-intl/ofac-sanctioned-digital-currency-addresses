@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Thread-local storage for boto3 clients
 thread_local = threading.local()
+boto3_client_lock = threading.Lock()
 
 # Constants
 NUM_WORKERS = 10
@@ -78,9 +79,10 @@ def read_sanctioned_addresses(directory):
     return unique_addresses
 
 def get_s3_client(session):
-    """Get thread-local S3 client to ensure thread safety."""
+    """Get thread-local S3 client"""
     if not hasattr(thread_local, 's3_client'):
-        thread_local.s3_client = session.client('s3')
+        with boto3_client_lock:
+            thread_local.s3_client = session.client('s3')
     return thread_local.s3_client
 
 def create_s3_object(address, bucket, prefix, dry_run, session):
