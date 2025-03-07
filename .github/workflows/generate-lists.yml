@@ -13,6 +13,7 @@ jobs:
     permissions:
         contents: write
         id-token: write
+    environment: production
     steps:
     - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       with:
