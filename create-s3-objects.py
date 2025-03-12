@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 from io import BytesIO
+import base64
 
 import boto3
 from botocore.exceptions import ClientError
@@ -87,10 +88,12 @@ def get_s3_client(session):
 
 def create_s3_object(address, bucket, prefix, dry_run, session):
     """Create a single empty S3 object for the given address."""
-    object_key = f"{prefix}{address}"
+    # Encode the address using urlsafe_b64encode and remove trailing equals signs
+    encoded_address = base64.urlsafe_b64encode(address.encode()).decode().rstrip('=')
+    object_key = f"{prefix}{encoded_address}"
 
     if dry_run:
-        logger.debug(f"DRY RUN: Would create empty S3 object s3://{bucket}/{object_key}")
+        logger.info(f"DRY RUN: Would create S3 object s3://{bucket}/{object_key} ({address})")
         return True, None
 
     try:
