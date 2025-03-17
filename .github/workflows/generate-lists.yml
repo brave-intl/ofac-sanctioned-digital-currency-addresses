@@ -9,9 +9,11 @@ on:
 
 jobs:
   generate-lists:
-
     runs-on: ubuntu-latest
-
+    permissions:
+        contents: write
+        id-token: write
+    environment: production
     steps:
     - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
       with:
@@ -29,7 +31,7 @@ jobs:
         sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
         sudo apt-get update
         sudo apt-get install -y google-chrome-stable chromium-chromedriver
-        pip install selenium webdriver-manager
+        pip install selenium webdriver-manager boto3
     - name: Download the sdn_advanced.xml file
       run: |
         wget --tries=5 --wait=60 --retry-on-http-error=403 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
@@ -37,6 +39,15 @@ jobs:
       run: |
         mkdir data
         python3 generate-address-list.py -f JSON TXT -path ./data
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: us-west-2
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        mask-aws-account-id: true
+    - name: Create S3 objects
+      run: |
+        python3 create-s3-objects.py -d data -b ${{ secrets.S3_BUCKET }}
     - name: Commit files
       run: |
         git config --local user.email "45324+github-actions[bot]@users.noreply.github.com"
