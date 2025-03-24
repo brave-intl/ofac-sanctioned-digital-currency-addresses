@@ -15,4 +15,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest update_s3_object_test.py
+        pytest update_s3_objects_test.py
