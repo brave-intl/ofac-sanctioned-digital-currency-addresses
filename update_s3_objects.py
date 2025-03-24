@@ -33,7 +33,7 @@ OBJECT_PREFIX = ''
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description='Read sanctioned addresses from TXT files and create empty S3 objects.'
+        description='Read sanctioned addresses from TXT files and create/remove empty S3 objects to match the SDN'
     )
     parser.add_argument(
         '-d', '--directory',
@@ -45,7 +45,7 @@ def parse_arguments():
         '-b', '--bucket',
         type=str,
         required=True,
-        help='S3 bucket name where objects will be created'
+        help='S3 bucket name where objects are managed'
     )
     parser.add_argument(
         '--dry-run',
@@ -227,14 +227,17 @@ def delete_s3_object(address, bucket, prefix, dry_run, s3_client):
 def process_action_chunk(action_chunk, bucket, prefix, dry_run, s3_client):
     """Process a chunk of actions."""
     results = {
-        'success': 0,
+        'created': 0,
+        'removed': 0,
         'errors': 0
     }
 
     for action in action_chunk:
+        created = False
+        removed = False
         match action['action']:
             case 'add':
-                success, error = create_s3_object(
+                created, error = create_s3_object(
                     action['address'],
                     bucket,
                     prefix,
@@ -242,15 +245,17 @@ def process_action_chunk(action_chunk, bucket, prefix, dry_run, s3_client):
                     s3_client
                 )
             case 'remove':
-                success, error = delete_s3_object(
+                removed, error = delete_s3_object(
                     action['address'],
                     bucket,
                     prefix,
                     dry_run,
                     s3_client
                 )
-        if success:
-            results['success'] += 1
+        if created:
+            results['created'] += 1
+        if removed:
+            results['removed'] += 1
         else:
             results['errors'] += 1
             logger.error(error)
@@ -280,6 +285,7 @@ def reconcile_s3(
     action_chunks = [action_list[i:i + chunk_size] for i in range(0, total_actions, chunk_size)]
 
     created_count = 0
+    removed_count = 0
     error_count = 0
 
     # Use ThreadPoolExecutor to process chunks in parallel
@@ -296,21 +302,23 @@ def reconcile_s3(
             chunk_index = future_to_chunk[future]
             try:
                 results = future.result()
-                created_count += results['success']
+                created_count += results['created']
+                removed_count += results['removed']
                 error_count += results['errors']
 
                 logger.info(
                     f"Completed chunk {chunk_index+1}/{len(action_chunks)}, "
-                    f"total progress: {created_count + error_count}/{total_actions} "
-                    f"({(created_count + error_count) / total_actions * 100:.1f}%)"
+                    f"total progress: {created_count + removed_count + error_count}/{total_actions} "
+                    f"({(created_count + removed_count + error_count) / total_actions * 100:.1f}%)"
                 )
 
             except Exception as e:
                 logger.error(f"Exception processing chunk {chunk_index}: {e}")
 
-    logger.info(f"Successfully created {created_count} S3 objects")
+    logger.info(f"Created {created_count} S3 objects")
+    logger.info(f"Removed {removed_count} S3 objects")
     if error_count > 0:
-        logger.warning(f"Failed to create {error_count} S3 objects")
+        logger.warning(f"Failed to update {error_count} S3 objects")
 
 
 def main():
