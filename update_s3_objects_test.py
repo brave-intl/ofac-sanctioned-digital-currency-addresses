@@ -4,7 +4,7 @@ Test S3 interaction
 import base64
 import unittest
 from typing import List
-from create_s3_objects import decode, encode, generate_actions
+from update_s3_objects import decode, encode, generate_actions
 
 
 class TestAddressEncoding(unittest.TestCase):
