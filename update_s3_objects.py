@@ -131,44 +131,6 @@ def read_sanctioned_addresses(directory):
     return unique_addresses
 
 
-def fetch_s3_addresses(client, bucket: str) -> List[str]:
-    """
-    Get a list of the addresses that are currently stored in S3
-    """
-    addresses = []
-    continuation_token = None
-
-    while True:
-        params = {
-            'Bucket': bucket,
-            'MaxKeys': 1000
-        }
-
-        # Add continuation token if we're paginating
-        if continuation_token:
-            params['ContinuationToken'] = continuation_token
-
-        response = client.list_objects_v2(**params)
-
-        if 'Contents' in response:
-            for obj in response['Contents']:
-                key = obj['Key']
-                # Extract filename from the key (removing path prefix)
-                decoded_address = decode(os.path.basename(key))
-                addresses.append(decoded_address)
-
-        # Check if there are more pages
-        if response.get('IsTruncated'):
-            continuation_token = response.get('NextContinuationToken')
-            print(
-                f"Retrieved {len(response['Contents'])} more addresses, \
-                continuing to next page...")
-        else:
-            break
-
-    return addresses
-
-
 def get_s3_client(session):
     """Get thread-local S3 client"""
     if not hasattr(thread_local, 's3_client'):
@@ -330,16 +292,22 @@ def main():
 
     session = boto3.Session()
     s3_client = get_s3_client(session)
+    s3_resource = boto3.resource('s3')
+    bucket = s3_resource.Bucket(args.bucket)
 
     # Read sanctioned addresses
     sdn_addresses = read_sanctioned_addresses(args.directory)
-    s3_addresses = fetch_s3_addresses(s3_client, args.bucket)
+    s3_addresses = bucket.objects.all()
 
     if not sdn_addresses:
         logger.error("No addresses found in SDN list. Exiting.")
         return
 
     actions = generate_actions(sdn_addresses, s3_addresses)
+    percent_removed = len(a for a in actions if a['action'] == 'remove') / len(s3_addresses)
+    if percent_removed > 15:
+        logger.error("Too many addresses are set to be removed. Human review required.")
+        return
 
     # Create S3 objects
     reconcile_s3(
