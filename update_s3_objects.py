@@ -297,14 +297,15 @@ def main():
 
     # Read sanctioned addresses
     sdn_addresses = read_sanctioned_addresses(args.directory)
-    s3_addresses = bucket.objects.all()
+    s3_addresses = [obj.key for obj in bucket.objects.all()]
 
     if not sdn_addresses:
         logger.error("No addresses found in SDN list. Exiting.")
         return
-
     actions = generate_actions(sdn_addresses, s3_addresses)
-    percent_removed = len(a for a in actions if a['action'] == 'remove') / len(s3_addresses)
+    remove_count = len(a for a in actions if a['action'] == 'remove')
+    total_count = len(s3_addresses)
+    percent_removed = (remove_count / total_count) * 100
     if percent_removed > 15:
         logger.error("Too many addresses are set to be removed. Human review required.")
         return
