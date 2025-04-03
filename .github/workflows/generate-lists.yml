@@ -79,7 +79,7 @@ jobs:
     needs: generate-lists
     if: success()
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           ref: lists
           fetch-depth: 0
@@ -94,7 +94,7 @@ jobs:
             echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. No changes were needed to the address lists." >> $GITHUB_OUTPUT
           fi
       - name: Notify Slack of success
-        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
           status: success
           custom_payload: |
