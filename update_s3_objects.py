@@ -298,7 +298,7 @@ def main():
 
     # Read sanctioned addresses
     sdn_addresses = read_sanctioned_addresses(args.directory)
-    s3_addresses = [decode(obj.key) for obj in bucket.objects.all()]
+    s3_addresses = [decode(obj.key.replace(OBJECT_PREFIX, "")) for obj in bucket.objects.all()]
 
     if not sdn_addresses:
         logger.error("No addresses found in SDN list. Exiting.")
