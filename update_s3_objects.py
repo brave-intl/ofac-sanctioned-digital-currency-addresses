@@ -84,6 +84,7 @@ def generate_actions(true_list, mirror_list):
     action_list = []
     true_set = set(true_list)
     mirror_set = set(mirror_list)
+    logger.error(f'SDN: {true_set}\nS3 Mirror: {mirror_set}')
 
     # Find elements unique to each list
     only_in_true = list(true_set - mirror_set)
@@ -307,7 +308,8 @@ def main():
     total_count = len(s3_addresses)
     percent_removed = (remove_count / total_count) * 100
     if percent_removed > 15:
-        logger.error(os.getenv('GITHUB_ACTOR'))
+        if os.getenv('GITHUB_ACTOR') in ["mrose17", "Sneagan", "mschfh"]:
+            logger.error(os.getenv('GITHUB_ACTOR'))
         logger.error("Too many addresses are set to be removed. Human review "
                      f'required.\nTotal addresses: {total_count}\nAddresses to'
                      f' remove: {remove_count}')
