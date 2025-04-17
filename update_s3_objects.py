@@ -308,14 +308,14 @@ def main():
     total_count = len(s3_addresses)
     percent_removed = (remove_count / total_count) * 100
     if percent_removed > 15:
-        if os.getenv('GITHUB_ACTOR') in ["mrose17", "Sneagan", "mschfh"]:
-            logger.error(os.getenv('GITHUB_ACTOR'))
-        logger.error("Too many addresses are set to be removed. Human review "
-                     f'required.\nTotal addresses: {total_count}\nAddresses to'
-                     f' remove: {remove_count}')
-        raise Exception("Too many addresses are set to be removed. Human "
-                        f'review required.\nTotal addresses: {total_count}\n'
-                        f'Addresses to remove: {remove_count}')
+        # Only manual runs by whitelisted actors can bypass the 15% limit
+        if os.getenv('GITHUB_ACTOR') not in ["mrose17", "Sneagan", "mschfh"]:
+            logger.error("Too many addresses are set to be removed. Human review "
+                         f'required.\nTotal addresses: {total_count}\nAddresses to'
+                         f' remove: {remove_count}')
+            raise Exception("Too many addresses are set to be removed. Human "
+                            f'review required.\nTotal addresses: {total_count}\n'
+                            f'Addresses to remove: {remove_count}')
 
     # Create S3 objects
     reconcile_s3(
