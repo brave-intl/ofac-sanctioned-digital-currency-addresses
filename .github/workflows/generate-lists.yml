@@ -46,6 +46,8 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         mask-aws-account-id: true
     - name: Update S3 objects
+      env:
+        GITHUB_ACTOR: ${{github.actor}}
       run: |
         python3 update_s3_objects.py -d data -b ${{ secrets.S3_BUCKET }}
     - name: Commit files

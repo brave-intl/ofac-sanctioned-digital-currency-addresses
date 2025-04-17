@@ -307,8 +307,13 @@ def main():
     total_count = len(s3_addresses)
     percent_removed = (remove_count / total_count) * 100
     if percent_removed > 15:
-        logger.error("Too many addresses are set to be removed. Human review required.")
-        return
+        logger.error(os.getenv('GITHUB_ACTOR'))
+        logger.error("Too many addresses are set to be removed. Human review "
+                     f'required.\nTotal addresses: {total_count}\nAddresses to'
+                     f' remove: {remove_count}')
+        raise Exception("Too many addresses are set to be removed. Human "
+                        f'review required.\nTotal addresses: {total_count}\n'
+                        f'Addresses to remove: {remove_count}')
 
     # Create S3 objects
     reconcile_s3(
@@ -320,6 +325,7 @@ def main():
         workers=NUM_WORKERS,
         chunk_size=CHUNK_SIZE
     )
+
 
 if __name__ == "__main__":
     main()
