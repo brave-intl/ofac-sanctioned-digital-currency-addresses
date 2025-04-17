@@ -303,7 +303,7 @@ def main():
         logger.error("No addresses found in SDN list. Exiting.")
         return
     actions = generate_actions(sdn_addresses, s3_addresses)
-    remove_count = len(a for a in actions if a['action'] == 'remove')
+    remove_count = sum(a for a in actions if a['action'] == 'remove')
     total_count = len(s3_addresses)
     percent_removed = (remove_count / total_count) * 100
     if percent_removed > 15:
