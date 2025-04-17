@@ -15,12 +15,12 @@ jobs:
         id-token: write
     environment: production
     steps:
-    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+    - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
         fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
     - name: Set up Python 3.11
-      uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5
+      uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.1.0
       with:
         python-version: 3.11
     - name: Install dependencies
@@ -40,7 +40,7 @@ jobs:
         mkdir data
         python3 generate-address-list.py -f JSON TXT -path ./data
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
       with:
         aws-region: us-west-2
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -74,13 +74,45 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: lists
 
+  success-notification:
+    runs-on: ubuntu-latest
+    needs: generate-lists
+    if: success()
+    steps:
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          ref: lists
+          fetch-depth: 0
+      - name: Get commit details
+        id: get-commit-details
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          MODIFIED_FILES=$(git show --name-only --pretty=format: HEAD | grep -c "sanctioned_addresses_" || echo "0")
+          if [ "$MODIFIED_FILES" -gt "0" ]; then
+            echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. $MODIFIED_FILES address files were updated." >> $GITHUB_OUTPUT
+          else
+            echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. No changes were needed to the address lists." >> $GITHUB_OUTPUT
+          fi
+      - name: Notify Slack of success
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
+        with:
+          status: success
+          custom_payload: |
+            {
+              "channel": "#compliance-bot",
+              "username": "compliance-bot",
+              "text": "${{ steps.get-commit-details.outputs.SLACK_MESSAGE }}",
+              "icon_emoji": ":white_check_mark:"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   failure-notification:
     runs-on: ubuntu-latest
     needs: generate-lists
     if: failure()
     steps:
       - name: Notify Slack of failure
-        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # https://github.com/8398a7/action-slack/releases/tag/v3.16.2
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
           status: failure
           custom_payload: |
