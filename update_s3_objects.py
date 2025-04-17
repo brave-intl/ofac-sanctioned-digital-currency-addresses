@@ -310,12 +310,12 @@ def main():
     if percent_removed > 15:
         # Only manual runs by whitelisted actors can bypass the 15% limit
         if os.getenv('GITHUB_ACTOR') not in ["mrose17", "Sneagan", "mschfh"]:
-            logger.error("Too many addresses are set to be removed. Human review "
-                         f'required.\nTotal addresses: {total_count}\nAddresses to'
-                         f' remove: {remove_count}')
+            logger.error("Too many addresses are set to be removed. Human "
+                         f'review required.\nTotal addresses: {total_count}\n'
+                         f'Addresses to remove: {remove_count}')
             raise Exception("Too many addresses are set to be removed. Human "
-                            f'review required.\nTotal addresses: {total_count}\n'
-                            f'Addresses to remove: {remove_count}')
+                            f'review required.\nTotal addresses: {total_count}'
+                            f'\nAddresses to remove: {remove_count}')
 
     # Create S3 objects
     reconcile_s3(
