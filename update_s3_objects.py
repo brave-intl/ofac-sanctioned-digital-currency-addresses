@@ -298,7 +298,7 @@ def main():
 
     # Read sanctioned addresses
     sdn_addresses = read_sanctioned_addresses(args.directory)
-    s3_addresses = [decode_s3_address(obj.key) for obj in bucket.objects.all()]
+    s3_addresses = [decode(obj.key) for obj in bucket.objects.all()]
 
     if not sdn_addresses:
         logger.error("No addresses found in SDN list. Exiting.")
@@ -327,21 +327,6 @@ def main():
         workers=NUM_WORKERS,
         chunk_size=CHUNK_SIZE
     )
-
-
-def decode_s3_address(encoded_address):
-    """
-    Our S3 file keys are base64 encoded representations of the addresses with
-    unneeded padding stripped. In order to compare with the SDN we need to
-    reverse this process.
-    """
-    # Add back the padding that was stripped
-    padding = '=' * ((4 - len(encoded_address) % 4) % 4)
-    padded_address = encoded_address + padding
-    # Decode with padding
-    decoded_bytes = base64.urlsafe_b64decode(padded_address)
-    # Return string representation
-    return decoded_bytes.decode()
 
 
 if __name__ == "__main__":
