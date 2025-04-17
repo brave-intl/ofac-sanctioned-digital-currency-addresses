@@ -84,7 +84,6 @@ def generate_actions(true_list, mirror_list):
     action_list = []
     true_set = set(true_list)
     mirror_set = set(mirror_list)
-    logger.error(f'SDN: {true_set}\nS3 Mirror: {mirror_set}')
 
     # Find elements unique to each list
     only_in_true = list(true_set - mirror_set)
