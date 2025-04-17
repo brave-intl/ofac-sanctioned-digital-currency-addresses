@@ -47,7 +47,7 @@ jobs:
         mask-aws-account-id: true
     - name: Update S3 objects
       run: |
-        python3 update_s3_object.py -d data -b ${{ secrets.S3_BUCKET }}
+        python3 update_s3_objects.py -d data -b ${{ secrets.S3_BUCKET }}
     - name: Commit files
       run: |
         git config --local user.email "45324+github-actions[bot]@users.noreply.github.com"
