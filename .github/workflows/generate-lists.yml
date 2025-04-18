@@ -99,12 +99,10 @@ jobs:
         uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
           status: custom
-          fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
               "channel": "#compliance-bot",
               "username": "compliance-bot",
-              "text": ":white_check_mark: *OFAC Sanctions List Update Successful*",
               "blocks": [
                 {
                   "type": "header",
@@ -118,7 +116,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Status:* Successful\n*Date:* ${{ github.event.repository.updated_at }}\n*Repository:* <https://github.com/${{ github.repository }}|${{ github.repository }}>"
+                    "text": "*Status:* Successful\n*Date:* ${{ github.event.repository.updated_at }}\n*Repository:* <https://github.com/${{ github.repository }}\\|${{ github.repository }}>"
                   }
                 },
                 {
@@ -135,7 +133,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Workflow Run:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>\n*Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha | slice(0, 7) }}>"
+                    "text": "*Workflow Run:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\|View Details>\n*Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\|${{ github.sha || slice(0, 7) }}>"
                   }
                 },
                 {
