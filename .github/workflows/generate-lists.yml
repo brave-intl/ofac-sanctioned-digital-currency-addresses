@@ -88,8 +88,11 @@ jobs:
       - name: Get commit details
         id: get-commit-details
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          MODIFIED_FILES=$(git show --name-only --pretty=format: HEAD | grep -c "sanctioned_addresses_" || echo "0")
+          # Only count files that were actually modified in the last commit
+          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -c "sanctioned_addresses_" || echo "0")
+          echo "Found $MODIFIED_FILES modified sanctioned address files"
+          
+          # If we're on the lists branch and this is running after our commit
           if [ "$MODIFIED_FILES" -gt "0" ]; then
             echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. $MODIFIED_FILES address files were updated." >> $GITHUB_OUTPUT
           else
@@ -116,7 +119,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Status:* Successful\n*Date:* ${{ github.event.repository.updated_at }}\n*Repository:* <https://github.com/${{ github.repository }}\\|${{ github.repository }}>"
+                    "text": "*Status:* Successful\n*Repository:* <https://github.com/${{ github.repository }}\\|${{ github.repository }}>"
                   }
                 },
                 {
@@ -163,9 +166,63 @@ jobs:
             {
               "channel": "#compliance-bot",
               "username": "compliance-bot",
-              "text": "The OFAC sanctioned digital currency addresses list generation job has failed.\n\nFailure details: ${{ toJson(needs.generate-lists.outputs) }}\n\nWorkflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-
-              "icon_emoji": ":x:"
+              "text": ":x: *OFAC Sanctions List Update Failed*",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ":x: OFAC Sanctions List Update Failed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status:* Failed\n*Repository:* <https://github.com/${{ github.repository }}\\|${{ github.repository }}>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Error Details:*\nThe OFAC sanctioned digital currency addresses list generation job has failed. Please check the workflow logs for detailed error information."
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow:*\n${{ github.workflow }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Job:*\ngenerate-lists"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":mag: *Troubleshooting:*\n• <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\|View Workflow Run>\n• <https://github.com/${{ github.repository }}/commit/${{ github.sha }}\\|View Commit ${{ github.sha }}>"
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "Triggered by: ${{ github.actor }} • Branch: ${{ github.ref_name }}"
+                    }
+                  ]
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
