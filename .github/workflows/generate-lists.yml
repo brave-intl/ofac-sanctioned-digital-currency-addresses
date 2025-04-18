@@ -104,8 +104,50 @@ jobs:
             {
               "channel": "#compliance-bot",
               "username": "compliance-bot",
-              "text": "${{ steps.get-commit-details.outputs.SLACK_MESSAGE }}",
-              "icon_emoji": ":white_check_mark:"
+              "text": ":white_check_mark: *OFAC Sanctions List Update Successful*",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ":white_check_mark: OFAC Sanctions List Update",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status:* Successful\n*Date:* ${{ github.event.repository.updated_at }}\n*Repository:* <https://github.com/${{ github.repository }}|${{ github.repository }}>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Details:*\n${{ steps.get-commit-details.outputs.SLACK_MESSAGE }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Workflow Run:* <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>\n*Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha | slice(0, 7) }}>"
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "Triggered by: ${{ github.actor }} • Workflow: ${{ github.workflow }}"
+                    }
+                  ]
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
