@@ -98,7 +98,8 @@ jobs:
       - name: Notify Slack of success
         uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
-          status: success
+          status: custom
+          fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
               "channel": "#compliance-bot",
@@ -116,12 +117,14 @@ jobs:
       - name: Notify Slack of failure
         uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
-          status: failure
+          status: custom
+          fields: workflow,job,commit,repo,ref,author,took
           custom_payload: |
             {
               "channel": "#compliance-bot",
               "username": "compliance-bot",
-              "text": "The OFAC sanctioned digital currency addresses list generation job has failed.",
+              "text": "The OFAC sanctioned digital currency addresses list generation job has failed.\n\nFailure details: ${{ toJson(needs.generate-lists.outputs) }}\n\nWorkflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+
               "icon_emoji": ":x:"
             }
         env:
