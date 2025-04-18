@@ -45,9 +45,11 @@ jobs:
         aws-region: us-west-2
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         mask-aws-account-id: true
-    - name: Create S3 objects
+    - name: Update S3 objects
+      env:
+        GITHUB_ACTOR: ${{github.actor}}
       run: |
-        python3 create-s3-objects.py -d data -b ${{ secrets.S3_BUCKET }}
+        python3 update_s3_objects.py -d data -b ${{ secrets.S3_BUCKET }}
     - name: Commit files
       run: |
         git config --local user.email "45324+github-actions[bot]@users.noreply.github.com"
