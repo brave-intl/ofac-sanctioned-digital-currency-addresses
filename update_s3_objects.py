@@ -282,10 +282,14 @@ def reconcile_s3(
     logger.info(f"Removed {removed_count} S3 objects")
     if error_count > 0:
         logger.warning(f"Failed to update {error_count} S3 objects")
-    return format_results(created_count, removed_count)
+    return {
+        "addresses_added": created_count,
+        "addresses_removed": removed_count,
+        "details": format_result_message(created_count, removed_count)
+    }
 
 
-def format_results(added, removed):
+def format_result_message(added, removed):
     """
     Format results for the GitHub Action output. Make it nice for humans.
     """
