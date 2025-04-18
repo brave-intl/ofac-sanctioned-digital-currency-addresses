@@ -355,7 +355,7 @@ def main():
     )
 
     # Output in GitHub Actions format
-    print(f"::set-output name=s3_results::{json.dumps(results)}")
+    print(f"::set-output name=s3_results::{json.dumps(result)}")
 
 
 if __name__ == "__main__":
