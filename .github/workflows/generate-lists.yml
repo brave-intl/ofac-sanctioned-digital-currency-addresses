@@ -91,6 +91,8 @@ jobs:
           fetch-depth: 0
       - name: Get commit details
         id: get-commit-details
+        env:
+          S3_RESULTS: ${{ needs.generate-lists.outputs.s3_results }}
         run: |
           # Only count files that were actually modified in the last commit
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -c "sanctioned_addresses_" || echo "0")
