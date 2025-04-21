@@ -5,6 +5,7 @@ import concurrent.futures
 import glob
 import logging
 import os
+import json
 import threading
 from io import BytesIO
 import base64
@@ -281,6 +282,36 @@ def reconcile_s3(
     logger.info(f"Removed {removed_count} S3 objects")
     if error_count > 0:
         logger.warning(f"Failed to update {error_count} S3 objects")
+    return {
+        "addresses_added": created_count,
+        "addresses_removed": removed_count,
+        "details": format_result_message(created_count, removed_count)
+    }
+
+
+def format_result_message(added, removed):
+    """
+    Format results for the GitHub Action output. Make it nice for humans.
+    """
+    messages = []
+
+    if added > 0:
+        addresses_text = "address" if added == 1 else "addresses"
+        messages.append(f"added {added} {addresses_text}")
+
+    if removed > 0:
+        addresses_text = "address" if removed == 1 else "addresses"
+        messages.append(f"removed {removed} {addresses_text}")
+
+    if not messages:
+        return "No changes made to S3 mirror. All addresses are up to date."
+
+    if len(messages) == 1:
+        action_text = messages[0]
+    else:
+        action_text = f"{messages[0]} and {messages[1]}"
+
+    return f"Successfully {action_text} in the S3 mirror."
 
 
 def main():
@@ -317,7 +348,7 @@ def main():
                             f'\nAddresses to remove: {remove_count}')
 
     # Create S3 objects
-    reconcile_s3(
+    result = reconcile_s3(
         actions=actions,
         bucket=args.bucket,
         prefix=OBJECT_PREFIX,
@@ -326,6 +357,9 @@ def main():
         workers=NUM_WORKERS,
         chunk_size=CHUNK_SIZE
     )
+
+    # Output in GitHub Actions format
+    print(f"::set-output name=s3_results::{json.dumps(result)}")
 
 
 if __name__ == "__main__":
