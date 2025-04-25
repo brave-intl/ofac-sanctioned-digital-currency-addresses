@@ -97,6 +97,8 @@ jobs:
           # Only count files that were actually modified in the last commit
           MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -c "sanctioned_addresses_" || echo "0")
           echo "Found $MODIFIED_FILES modified sanctioned address files"
+          DEBUG_MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep "sanctioned_addresses_")
+          echo "DEBUG: Modified Files: $DEBUG_MODIFIED_FILES"
 
           # Parse Python S3 results if available
           S3_DETAILS=""
