@@ -94,22 +94,13 @@ jobs:
         env:
           S3_RESULTS: ${{ needs.generate-lists.outputs.s3_results }}
         run: |
-          # Only count files that were actually modified in the last commit
-          MODIFIED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -c "sanctioned_addresses_" || echo "0")
-          echo "Found $MODIFIED_FILES modified sanctioned address files"
-
           # Parse Python S3 results if available
           S3_DETAILS=""
           if [ -n "$S3_RESULTS" ]; then
             S3_DETAILS="\n\n*S3 Update Results:*\n$(echo $S3_RESULTS | jq -r '.details')"
           fi
 
-          # If we're on the lists branch and this is running after our commit
-          if [ "$MODIFIED_FILES" -gt "0" ]; then
-            echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. $MODIFIED_FILES address files were updated.$S3_DETAILS" >> $GITHUB_OUTPUT
-          else
-            echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully. No changes were needed to the address lists.$S3_DETAILS" >> $GITHUB_OUTPUT
-          fi
+          echo "SLACK_MESSAGE=The OFAC sanctioned digital currency addresses list generation job completed successfully.$S3_DETAILS" >> $GITHUB_OUTPUT
       - name: Notify Slack of success
         uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486 # v3.16.2
         with:
