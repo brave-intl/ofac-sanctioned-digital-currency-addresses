@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -31,10 +32,6 @@ class OfacWebsiteScraper:
             EC.presence_of_element_located((by, value))
         )
 
-    def click_element(self, by, value):
-        element = self.driver.find_element(by, value)
-        element.click()
-
     def get_element_text(self, by, value):
         return self.driver.find_element(by, value).text
 
@@ -51,21 +48,25 @@ class OfacWebsiteScraper:
                 print("Website opened")
 
                 # Wait until the 'File Signatures' button with the known ID is present
-                self.wait_for_element(By.ID, "accordion__heading-raa-1")
+                self.wait_for_element(By.ID, "accordion__heading-:r1:")
                 print("File Signatures button found")
 
-                # Click the 'File Signatures' button with the known ID
-                self.click_element(By.ID, "accordion__heading-raa-1")
+                # Scroll to (waiting for animation) and Click the 'File
+                # Signatures' button with the known ID
+                header_element = self.driver.find_element(By.ID, "accordion__heading-:r1:")
+                ActionChains(self.driver).move_to_element(header_element).perform()
+                time.sleep(1)
+                header_element.click()
                 print("File Signatures button clicked")
 
                 # Wait for the checksums panel to be visible
-                self.wait_for_element(By.ID, "accordion__panel-raa-1")
+                self.wait_for_element(By.ID, "accordion__panel-:r1:")
                 time.sleep(3)
                 print("Checksums panel found")
 
                 # Extract the checksums content
                 checksums_content = self.get_element_text(
-                    By.ID, "accordion__panel-raa-1"
+                    By.ID, "accordion__panel-:r1:"
                 )
                 print("Checksums content extracted")
 
