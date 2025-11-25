@@ -8,7 +8,7 @@ here: [`sdn_advanced.xml`][2].
 [1]: https://home.treasury.gov/policy-issues/financial-sanctions/specially-designated-nationals-and-blocked-persons-list-sdn-human-readable-lists
 [2]: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
 
-As of December 2023 the tool covers the following assets. There might be assets
+As of November 24, 2025 the tool covers the following assets. There might be assets
 on the SDN list that aren't covered yet. These can be found by grepping for
 "Digital Currency Address" on the `sdn_advanced.xml` file. Feel free to submit
 an issue or pull-request adding assets.
@@ -24,12 +24,14 @@ an issue or pull-request adding assets.
 - BSV (Bitcoin Satoshi Vision)
 - BCH (Bitcoin Cash)
 - XVG (Verge)
-- USDC (USD Coin)
 - USDT (USD Tether)
 - XRP (Ripple)
-- TRX (Tron)
 - ARB (Arbitrum)
 - BSC (Binance Smart Chain)
+- USDC (USD Coin)
+- TRX (Tron)
+- SOL (Solana)
+- BNB (Binance Coin) - removed from the SDN as of 2025-11-24
 
 The sanctioned addresses can be extracted with this tool from the
 [`sdn_advanced.xml`][2] file. The tools supports the following output formats:
