@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "ofac-sanctions-list"
+version = "0.1.0"
+description = "Extract and manage OFAC sanctioned digital currency addresses"
+readme = "README.md"
+packages = [
+    {include = "ofac_address_extractor.py"},
+    {include = "update_s3_objects.py"},
+    {include = "ofac_scraper.py"}
+]
+
+[tool.poetry.scripts]
+ofac-extract = "ofac_address_extractor:main"
+ofac-s3-sync = "update_s3_objects:main"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+boto3 = "^1.40.73"
+botocore = "^1.35.73"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "8.4.2"
+pytest-cov = "4.1.0"
+mypy = "1.18.2"
+ruff = "0.8.6"
+bandit = {extras = ["toml"], version = "1.8.6"}
+pre-commit = "4.3.0"
+vulture = "2.14"
+types-boto3 = "^1.0.2"
+boto3-stubs = {extras = ["s3"], version = "^1.40.73"}
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "tmp", "data"]
+skips = ["B404", "B603", "B607"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=. --cov-report=term-missing --cov-report=html"
+
+[tool.vulture]
+exclude = ["tests/", "tmp/", "data/"]
+min_confidence = 80
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
