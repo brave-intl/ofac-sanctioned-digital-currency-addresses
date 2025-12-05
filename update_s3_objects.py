@@ -264,12 +264,16 @@ def reconcile_s3(
                 removed_count += results["removed"]
                 error_count += results["errors"]
 
+                completed = created_count + removed_count + error_count
+                if total_actions > 0:
+                    progress_pct = completed / total_actions * 100
+                else:
+                    progress_pct = 0
+
                 logger.info(
                     f"Completed chunk {chunk_index + 1}/{len(action_chunks)}, "
-                    f"total progress: {created_count + removed_count + error_count}/"
-                    f"{total_actions} ({(
-                        created_count + removed_count + error_count
-                    ) / total_actions * 100:.1f}%)"
+                    f"total progress: {completed}/{total_actions} "
+                    f"({progress_pct:.1f}%)"
                 )
 
             except Exception as e:
