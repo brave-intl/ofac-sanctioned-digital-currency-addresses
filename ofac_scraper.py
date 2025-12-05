@@ -1,14 +1,13 @@
-import logging
 import time
+
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class OfacWebsiteScraper:
@@ -41,7 +40,8 @@ class OfacWebsiteScraper:
 
         for attempt in range(MAX_RETRIES):
             print(
-                f"Attempting to get SHA-256 checksum (attempt {attempt + 1}/{MAX_RETRIES})..."
+                f"Attempting to get SHA-256 checksum (attempt"
+                f" {attempt + 1}/{MAX_RETRIES})..."
             )
             try:
                 self.open_website("https://sanctionslist.ofac.treas.gov/Home/SdnList")
@@ -53,7 +53,10 @@ class OfacWebsiteScraper:
 
                 # Scroll to (waiting for animation) and Click the 'File
                 # Signatures' button with the known ID
-                header_element = self.driver.find_element(By.ID, "accordion__heading-:r1:")
+                header_element = self.driver.find_element(
+                    By.ID,
+                    "accordion__heading-:r1:"
+                )
                 ActionChains(self.driver).move_to_element(header_element).perform()
                 time.sleep(1)
                 header_element.click()
@@ -78,7 +81,8 @@ class OfacWebsiteScraper:
 
             except TimeoutException:
                 print(
-                    f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. Retrying in {RETRY_DELAY} seconds..."
+                    f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. "
+                    f"Retrying in {RETRY_DELAY} seconds..."
                 )
                 time.sleep(RETRY_DELAY)
                 if attempt == MAX_RETRIES - 1:

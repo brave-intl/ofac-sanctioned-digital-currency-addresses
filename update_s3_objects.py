@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+import base64
 import concurrent.futures
 import glob
+import json
 import logging
 import os
-import json
 import threading
 from io import BytesIO
-import base64
-from typing import List
 
 import boto3
 from botocore.exceptions import ClientError
@@ -34,7 +33,8 @@ OBJECT_PREFIX = ''
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description='Read sanctioned addresses from TXT files and create/remove empty S3 objects to match the SDN'
+        description='Read sanctioned addresses from TXT files and create/remove empty '
+        'S3 objects to match the SDN'
     )
     parser.add_argument(
         '-d', '--directory',
@@ -123,7 +123,10 @@ def read_sanctioned_addresses(directory):
         try:
             with open(file_path) as f:
                 addresses = [line.strip() for line in f if line.strip()]
-                logger.info(f"Read {len(addresses)} addresses from {os.path.basename(file_path)}")
+                logger.info(
+                    f"Read {len(addresses)} addresses from "
+                    f"{os.path.basename(file_path)}"
+                )
                 unique_addresses.update(addresses)
         except Exception as e:
             logger.error(f"Error reading {file_path}: {e}")
@@ -145,7 +148,9 @@ def create_s3_object(address, bucket, prefix, dry_run, s3_client):
     object_key = f"{prefix}{encode(address)}"
 
     if dry_run:
-        logger.info(f"DRY RUN: Would create S3 object s3://{bucket}/{object_key} ({address})")
+        logger.info(
+            f"DRY RUN: Would create S3 object s3://{bucket}/{object_key} "
+            f"({address})")
         return True, None
 
     try:
@@ -167,7 +172,9 @@ def delete_s3_object(address, bucket, prefix, dry_run, s3_client):
     """Delete an S3 object for the given address."""
     object_key = f"{prefix}{encode(address)}"
     if dry_run:
-        logger.info(f"DRY RUN: Would delete S3 object s3://{bucket}/{object_key} ({address})")
+        logger.info(
+            f"DRY RUN: Would delete S3 object s3://{bucket}/{object_key} ({address})"
+        )
         return True, None
     try:
         s3_client.delete_object(
@@ -177,7 +184,8 @@ def delete_s3_object(address, bucket, prefix, dry_run, s3_client):
         # Check if the object was actually deleted
         try:
             s3_client.head_object(Bucket=bucket, Key=object_key)
-            return False, f"Failed to delete S3 object for {address}: Object still exists"
+            return False, f"Failed to delete S3 object for {address}: "
+            "Object still exists"
         except ClientError as e:
             if e.response['Error']['Code'] == '404':
                 # 404. File is gone
@@ -208,7 +216,8 @@ def process_action_chunk(action_chunk, bucket, prefix, dry_run, s3_client):
                     results['created'] += 1
                 else:
                     results['errors'] += 1
-                    if error: logger.error(error)
+                    if error:
+                        logger.error(error)
             case 'remove':
                 success, error = delete_s3_object(
                     action['address'], bucket, prefix, dry_run, s3_client
@@ -239,10 +248,14 @@ def reconcile_s3(
     action_list = list(actions)
     total_actions = len(action_list)
 
-    logger.info(f"Starting to take {total_actions} actions on S3 objects using {workers} worker threads")
+    logger.info(f"Starting to take {total_actions} actions on S3 objects using "
+                f"{workers} worker threads")
 
     # Create chunks of actions to process
-    action_chunks = [action_list[i:i + chunk_size] for i in range(0, total_actions, chunk_size)]
+    action_chunks = [
+        action_list[i:i + chunk_size]
+        for i in range(0, len(action_list), chunk_size)
+    ]
 
     created_count = 0
     removed_count = 0
@@ -267,9 +280,11 @@ def reconcile_s3(
                 error_count += results['errors']
 
                 logger.info(
-                    f"Completed chunk {chunk_index+1}/{len(action_chunks)}, "
-                    f"total progress: {created_count + removed_count + error_count}/{total_actions} "
-                    f"({(created_count + removed_count + error_count) / total_actions * 100:.1f}%)"
+                    f"Completed chunk {chunk_index + 1}/{len(action_chunks)}, "
+                    f"total progress: {created_count + removed_count + error_count}/"
+                    f"{total_actions} ({(
+                        created_count + removed_count + error_count
+                    ) / total_actions * 100:.1f}%)"
                 )
 
             except Exception as e:

@@ -2,22 +2,22 @@
 Test S3 interaction
 """
 import base64
-import unittest
-from unittest.mock import Mock, patch
-from typing import List
 import tempfile
+import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
+
 from botocore.exceptions import ClientError
 
 from update_s3_objects import (
-    decode,
-    encode,
-    generate_actions,
-    read_sanctioned_addresses,
-    process_action_chunk,
     create_s3_object,
+    decode,
     delete_s3_object,
-    format_result_message
+    encode,
+    format_result_message,
+    generate_actions,
+    process_action_chunk,
+    read_sanctioned_addresses,
 )
 
 
@@ -89,7 +89,7 @@ class TestAddressEncoding(unittest.TestCase):
 
     def test_padding_handling(self) -> None:
         """Test that the functions correctly handle padding."""
-        test_cases: List[str] = []
+        test_cases: list[str] = []
         test_cases.append("abc")  # 3 bytes = 4 base64 chars, no padding
         test_cases.append("abcd")  # 4 bytes = 6 base64 chars, 2 padding chars
         test_cases.append("abcde")  # 5 bytes = 8 base64 chars, 1 padding char
