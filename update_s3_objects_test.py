@@ -1,6 +1,7 @@
 """
 Test S3 interaction
 """
+
 import base64
 import tempfile
 import unittest
@@ -25,6 +26,7 @@ class TestAddressEncoding(unittest.TestCase):
     """
     Test encoding
     """
+
     def test_encode(self) -> None:
         """Test that addresses are correctly encoded."""
         test_cases = [
@@ -40,13 +42,13 @@ class TestAddressEncoding(unittest.TestCase):
         ]
         for address in test_cases:
             encoded = encode(address)
-            self.assertNotIn('=', encoded)
-            self.assertNotIn('+', encoded)
-            self.assertNotIn('/', encoded)
+            self.assertNotIn("=", encoded)
+            self.assertNotIn("+", encoded)
+            self.assertNotIn("/", encoded)
             # Check that we can manually decode it correctly without our decode
             # function
             pad_len = (4 - len(encoded) % 4) % 4
-            padded = encoded + '=' * pad_len
+            padded = encoded + "=" * pad_len
             decoded_bytes = base64.urlsafe_b64decode(padded)
             self.assertEqual(decoded_bytes.decode(), address)
 
@@ -103,6 +105,7 @@ class TestGenerateActions(unittest.TestCase):
     """
     Test action generation based on every combination of set relationships
     """
+
     def test_empty_lists(self):
         """Test with empty lists"""
         result = generate_actions([], [])
@@ -120,19 +123,13 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = ["addr4", "addr5", "addr6"]
         result = generate_actions(true_list, mirror_list)
         # Check all items from true_list have 'add' actions
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 3)
-        self.assertTrue(
-            all(item['address'] in true_list for item in add_actions)
-        )
+        self.assertTrue(all(item["address"] in true_list for item in add_actions))
         # Check all items from mirror_list have 'remove' actions
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 3)
-        self.assertTrue(
-            all(item['address'] in mirror_list for item in remove_actions)
-        )
+        self.assertTrue(all(item["address"] in mirror_list for item in remove_actions))
         # Total actions should be sum of both lists' lengths
         self.assertEqual(len(result), len(true_list) + len(mirror_list))
 
@@ -142,17 +139,15 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = ["addr3", "addr4", "addr5", "addr6"]
         result = generate_actions(true_list, mirror_list)
         # Check for correct add actions: addr1, addr2
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 2)
-        add_addresses = [item['address'] for item in add_actions]
+        add_addresses = [item["address"] for item in add_actions]
         self.assertIn("addr1", add_addresses)
         self.assertIn("addr2", add_addresses)
         # Check for correct remove actions: addr5, addr6
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 2)
-        remove_addresses = [item['address'] for item in remove_actions]
+        remove_addresses = [item["address"] for item in remove_actions]
         self.assertIn("addr5", remove_addresses)
         self.assertIn("addr6", remove_addresses)
         # Total actions should be 4
@@ -164,14 +159,12 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = ["addr1", "addr2", "addr3", "addr4"]
         result = generate_actions(true_list, mirror_list)
         # Check no add actions
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 0)
         # Check for correct remove actions: addr3, addr4
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 2)
-        remove_addresses = [item['address'] for item in remove_actions]
+        remove_addresses = [item["address"] for item in remove_actions]
         self.assertIn("addr3", remove_addresses)
         self.assertIn("addr4", remove_addresses)
         # Total actions should be 2
@@ -183,15 +176,13 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = ["addr1", "addr2"]
         result = generate_actions(true_list, mirror_list)
         # Check for correct add actions: addr3, addr4
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 2)
-        add_addresses = [item['address'] for item in add_actions]
+        add_addresses = [item["address"] for item in add_actions]
         self.assertIn("addr3", add_addresses)
         self.assertIn("addr4", add_addresses)
         # Check no remove actions
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 0)
         # Total actions should be 2
         self.assertEqual(len(result), 2)
@@ -206,14 +197,12 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = ["addr2", "addr3", "addr3", "addr4"]
         result = generate_actions(true_list, mirror_list)
         # Duplicates should be ignored (as sets are used)
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 1)  # Only addr1
-        self.assertEqual(add_actions[0]['address'], "addr1")
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        self.assertEqual(add_actions[0]["address"], "addr1")
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 1)  # Only addr4
-        self.assertEqual(remove_actions[0]['address'], "addr4")
+        self.assertEqual(remove_actions[0]["address"], "addr4")
 
     def test_with_non_string_elements(self):
         """Test with non-string elements. Another one that shouldn't happen"""
@@ -221,17 +210,15 @@ class TestGenerateActions(unittest.TestCase):
         mirror_list = [3, 4, 5]
         result = generate_actions(true_list, mirror_list)
         # Check for correct add actions: 1, 2
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 2)
-        add_addresses = [item['address'] for item in add_actions]
+        add_addresses = [item["address"] for item in add_actions]
         self.assertIn(1, add_addresses)
         self.assertIn(2, add_addresses)
         # Check for correct remove actions: 4, 5
-        remove_actions = [
-            item for item in result if item['action'] == 'remove'
-        ]
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 2)
-        remove_addresses = [item['address'] for item in remove_actions]
+        remove_addresses = [item["address"] for item in remove_actions]
         self.assertIn(4, remove_addresses)
         self.assertIn(5, remove_addresses)
 
@@ -247,15 +234,15 @@ class TestGenerateActions(unittest.TestCase):
         result = generate_actions(true_list, mirror_list)
 
         # Should generate remove actions for all S3 objects
-        remove_actions = [item for item in result if item['action'] == 'remove']
+        remove_actions = [item for item in result if item["action"] == "remove"]
         self.assertEqual(len(remove_actions), 3)
 
         # No add actions
-        add_actions = [item for item in result if item['action'] == 'add']
+        add_actions = [item for item in result if item["action"] == "add"]
         self.assertEqual(len(add_actions), 0)
 
         # All S3 addresses should be in remove actions
-        remove_addresses = [item['address'] for item in remove_actions]
+        remove_addresses = [item["address"] for item in remove_actions]
         self.assertEqual(set(remove_addresses), set(mirror_list))
 
 
@@ -275,8 +262,8 @@ class TestReadSanctionedAddresses(unittest.TestCase):
         """Test reading a single sanctioned addresses file"""
         test_file = self.temp_path / "sanctioned_addresses_XBT.txt"
         addresses = ["addr1", "addr2", "addr3"]
-        with open(test_file, 'w') as f:
-            f.write('\n'.join(addresses))
+        with open(test_file, "w") as f:
+            f.write("\n".join(addresses))
 
         result = read_sanctioned_addresses(str(self.temp_path))
         self.assertEqual(result, set(addresses))
@@ -289,10 +276,10 @@ class TestReadSanctionedAddresses(unittest.TestCase):
         xbt_addresses = ["xbt1", "xbt2"]
         eth_addresses = ["eth1", "eth2"]
 
-        with open(xbt_file, 'w') as f:
-            f.write('\n'.join(xbt_addresses))
-        with open(eth_file, 'w') as f:
-            f.write('\n'.join(eth_addresses))
+        with open(xbt_file, "w") as f:
+            f.write("\n".join(xbt_addresses))
+        with open(eth_file, "w") as f:
+            f.write("\n".join(eth_addresses))
 
         result = read_sanctioned_addresses(str(self.temp_path))
         expected = set(xbt_addresses + eth_addresses)
@@ -303,9 +290,9 @@ class TestReadSanctionedAddresses(unittest.TestCase):
         file1 = self.temp_path / "sanctioned_addresses_XBT.txt"
         file2 = self.temp_path / "sanctioned_addresses_ETH.txt"
 
-        with open(file1, 'w') as f:
+        with open(file1, "w") as f:
             f.write("addr1\naddr2\naddr3")
-        with open(file2, 'w') as f:
+        with open(file2, "w") as f:
             f.write("addr2\naddr3\naddr4")  # addr2 and addr3 are duplicates
 
         result = read_sanctioned_addresses(str(self.temp_path))
@@ -314,7 +301,7 @@ class TestReadSanctionedAddresses(unittest.TestCase):
     def test_ignore_empty_lines(self):
         """Test that empty lines are ignored"""
         test_file = self.temp_path / "sanctioned_addresses_XBT.txt"
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             f.write("addr1\n\naddr2\n  \naddr3\n")
 
         result = read_sanctioned_addresses(str(self.temp_path))
@@ -338,7 +325,7 @@ class TestReadSanctionedAddresses(unittest.TestCase):
         """
         # Create some other files that don't match the pattern
         other_file = self.temp_path / "other_file.txt"
-        with open(other_file, 'w') as f:
+        with open(other_file, "w") as f:
             f.write("some content")
 
         result = read_sanctioned_addresses(str(self.temp_path))
@@ -358,18 +345,18 @@ class TestProcessActionChunk(unittest.TestCase):
         Test that successful add actions are counted correctly.
         """
         actions = [
-            {'action': 'add', 'address': 'addr1'},
-            {'action': 'add', 'address': 'addr2'},
+            {"action": "add", "address": "addr1"},
+            {"action": "add", "address": "addr2"},
         ]
 
-        with patch('update_s3_objects.create_s3_object', return_value=(True, None)):
+        with patch("update_s3_objects.create_s3_object", return_value=(True, None)):
             result = process_action_chunk(
-                actions, 'test-bucket', '', False, self.mock_s3_client
+                actions, "test-bucket", "", False, self.mock_s3_client
             )
 
-        self.assertEqual(result['created'], 2)
-        self.assertEqual(result['removed'], 0)
-        self.assertEqual(result['errors'], 0)
+        self.assertEqual(result["created"], 2)
+        self.assertEqual(result["removed"], 0)
+        self.assertEqual(result["errors"], 0)
 
     # Verify successful removes are counted correctly
     def test_successful_remove_actions(self):
@@ -377,51 +364,50 @@ class TestProcessActionChunk(unittest.TestCase):
         Test that successful remove actions are counted correctly.
         """
         actions = [
-            {'action': 'remove', 'address': 'addr1'},
-            {'action': 'remove', 'address': 'addr2'},
+            {"action": "remove", "address": "addr1"},
+            {"action": "remove", "address": "addr2"},
         ]
 
-        with patch('update_s3_objects.delete_s3_object', return_value=(True, None)):
+        with patch("update_s3_objects.delete_s3_object", return_value=(True, None)):
             result = process_action_chunk(
-                actions, 'test-bucket', '', False, self.mock_s3_client
+                actions, "test-bucket", "", False, self.mock_s3_client
             )
 
-        self.assertEqual(result['created'], 0)
-        self.assertEqual(result['removed'], 2)
-        self.assertEqual(result['errors'], 0)
+        self.assertEqual(result["created"], 0)
+        self.assertEqual(result["removed"], 2)
+        self.assertEqual(result["errors"], 0)
 
     # Verify failed actions are counted as errors
     def test_failed_actions_counted_as_errors(self):
         """Test that failed actions are correctly counted as errors"""
         actions = [
-            {'action': 'add', 'address': 'addr1'},
-            {'action': 'remove', 'address': 'addr2'},
+            {"action": "add", "address": "addr1"},
+            {"action": "remove", "address": "addr2"},
         ]
 
         with patch(
-            'update_s3_objects.create_s3_object',
-            return_value=(False, "Add failed")
+            "update_s3_objects.create_s3_object", return_value=(False, "Add failed")
         ):
             with patch(
-                'update_s3_objects.delete_s3_object',
-                return_value=(False, "Delete failed")
+                "update_s3_objects.delete_s3_object",
+                return_value=(False, "Delete failed"),
             ):
                 result = process_action_chunk(
-                    actions, 'test-bucket', '', False, self.mock_s3_client
+                    actions, "test-bucket", "", False, self.mock_s3_client
                 )
 
-        self.assertEqual(result['created'], 0)
-        self.assertEqual(result['removed'], 0)
-        self.assertEqual(result['errors'], 2)
+        self.assertEqual(result["created"], 0)
+        self.assertEqual(result["removed"], 0)
+        self.assertEqual(result["errors"], 2)
 
     # Mixed success and failure
     def test_mixed_success_and_failure(self):
         """Test mixture of successful and failed operations"""
         actions = [
-            {'action': 'add', 'address': 'addr1'},
-            {'action': 'add', 'address': 'addr2'},
-            {'action': 'remove', 'address': 'addr3'},
-            {'action': 'remove', 'address': 'addr4'},
+            {"action": "add", "address": "addr1"},
+            {"action": "add", "address": "addr2"},
+            {"action": "remove", "address": "addr3"},
+            {"action": "remove", "address": "addr4"},
         ]
 
         # Mock create_s3_object: first succeeds, second fails
@@ -430,20 +416,18 @@ class TestProcessActionChunk(unittest.TestCase):
         delete_side_effect = [(True, None), (False, "Deletion failed")]
 
         with patch(
-            'update_s3_objects.create_s3_object',
-            side_effect=create_side_effect
+            "update_s3_objects.create_s3_object", side_effect=create_side_effect
         ):
             with patch(
-                'update_s3_objects.delete_s3_object',
-                side_effect=delete_side_effect
+                "update_s3_objects.delete_s3_object", side_effect=delete_side_effect
             ):
                 result = process_action_chunk(
-                    actions, 'test-bucket', '', False, self.mock_s3_client
+                    actions, "test-bucket", "", False, self.mock_s3_client
                 )
 
-        self.assertEqual(result['created'], 1)
-        self.assertEqual(result['removed'], 1)
-        self.assertEqual(result['errors'], 2)
+        self.assertEqual(result["created"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 2)
 
 
 class TestS3Operations(unittest.TestCase):
@@ -456,7 +440,7 @@ class TestS3Operations(unittest.TestCase):
     def test_create_s3_object_success(self):
         """Test successful S3 object creation"""
         success, error = create_s3_object(
-            'test_address', 'test-bucket', '', False, self.mock_s3_client
+            "test_address", "test-bucket", "", False, self.mock_s3_client
         )
 
         self.assertTrue(success)
@@ -466,28 +450,26 @@ class TestS3Operations(unittest.TestCase):
     def test_create_s3_object_failure(self):
         """Test failed S3 object creation"""
         self.mock_s3_client.upload_fileobj.side_effect = ClientError(
-            {'Error': {'Code': 'AccessDenied', 'Message': 'Access Denied'}},
-            'PutObject'
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}}, "PutObject"
         )
 
         success, error = create_s3_object(
-            'test_address', 'test-bucket', '', False, self.mock_s3_client
+            "test_address", "test-bucket", "", False, self.mock_s3_client
         )
 
         self.assertFalse(success)
         self.assertIsNotNone(error)
-        self.assertIn('Error creating S3 object', error)
+        self.assertIn("Error creating S3 object", error)
 
     def test_delete_s3_object_success(self):
         """Test successful S3 object deletion"""
         # Mock head_object to raise 404 (object doesn't exist after deletion)
         self.mock_s3_client.head_object.side_effect = ClientError(
-            {'Error': {'Code': '404', 'Message': 'Not Found'}},
-            'HeadObject'
+            {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
         )
 
         success, error = delete_s3_object(
-            'test_address', 'test-bucket', '', False, self.mock_s3_client
+            "test_address", "test-bucket", "", False, self.mock_s3_client
         )
 
         self.assertTrue(success)
@@ -497,7 +479,7 @@ class TestS3Operations(unittest.TestCase):
     def test_dry_run_create(self):
         """Test that dry run doesn't actually create objects"""
         success, error = create_s3_object(
-            'test_address', 'test-bucket', '', True, self.mock_s3_client
+            "test_address", "test-bucket", "", True, self.mock_s3_client
         )
 
         self.assertTrue(success)
@@ -507,7 +489,7 @@ class TestS3Operations(unittest.TestCase):
     def test_dry_run_delete(self):
         """Test that dry run doesn't actually delete objects"""
         success, error = delete_s3_object(
-            'test_address', 'test-bucket', '', True, self.mock_s3_client
+            "test_address", "test-bucket", "", True, self.mock_s3_client
         )
 
         self.assertTrue(success)

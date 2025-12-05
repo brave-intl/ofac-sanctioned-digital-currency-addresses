@@ -10,8 +10,8 @@ from ofac_scraper import OfacWebsiteScraper
 
 FEATURE_TYPE_TEXT = "Digital Currency Address - "
 NAMESPACE = {
-    'sdn': 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/'
-    'ADVANCED_XML'
+    "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/"
+    "ADVANCED_XML"
 }
 
 # List of implemented output formats
@@ -22,41 +22,42 @@ SDN_ADVANCED_FILE_PATH = "sdn_advanced.xml"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='Tool to extract sanctioned digital currency addresses from the '
-        'OFAC special designated nationals XML file (sdn_advanced.xml)')
+        description="Tool to extract sanctioned digital currency addresses from the "
+        "OFAC special designated nationals XML file (sdn_advanced.xml)"
+    )
     parser.add_argument(
-        'assets',
-        nargs='*',
+        "assets",
+        nargs="*",
         default=[],
-        help='the asset for which the sanctioned addresses should be extracted '
-        '(default: XBT (Bitcoin))'
+        help="the asset for which the sanctioned addresses should be extracted "
+        "(default: XBT (Bitcoin))",
     )
     parser.add_argument(
-        '-sdn',
-        '--special-designated-nationals-list',
-        dest='sdn',
-        type=argparse.FileType('rb'),
-        help='the path to the sdn_advanced.xml file (can be downloaded from '
-        'https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)',
-        default=SDN_ADVANCED_FILE_PATH
+        "-sdn",
+        "--special-designated-nationals-list",
+        dest="sdn",
+        type=argparse.FileType("rb"),
+        help="the path to the sdn_advanced.xml file (can be downloaded from "
+        "https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml)",
+        default=SDN_ADVANCED_FILE_PATH,
     )
     parser.add_argument(
-        '-f',
-        '--output-format',
-        dest='format',
-        nargs='*',
+        "-f",
+        "--output-format",
+        dest="format",
+        nargs="*",
         choices=OUTPUT_FORMATS,
         default=OUTPUT_FORMATS[0],
-        help='the output file format of the address list (default: TXT)'
+        help="the output file format of the address list (default: TXT)",
     )
     parser.add_argument(
-        '-path',
-        '--output-path',
-        dest='outpath',
+        "-path",
+        "--output-path",
+        dest="outpath",
         type=pathlib.Path,
         default=pathlib.Path("./"),
-        help='the path where the lists should be written to (default: current working '
-        'directory ("./")'
+        help="the path where the lists should be written to (default: current working "
+        'directory ("./")',
     )
     return parser.parse_args()
 
@@ -72,12 +73,11 @@ def get_possible_assets(root):
     """
     assets = []
     feature_types = root.findall(
-        'sdn:ReferenceValueSets/sdn:FeatureTypeValues/sdn:FeatureType',
-        NAMESPACE
+        "sdn:ReferenceValueSets/sdn:FeatureTypeValues/sdn:FeatureType", NAMESPACE
     )
     for feature_type in feature_types:
-        if feature_type.text.startswith('Digital Currency Address - '):
-            asset = feature_type.text.replace('Digital Currency Address - ', '')
+        if feature_type.text.startswith("Digital Currency Address - "):
+            asset = feature_type.text.replace("Digital Currency Address - ", "")
             assets.append(asset)
     return assets
 
@@ -87,7 +87,7 @@ def get_address_id(root, asset):
     feature_type = root.find(
         f"sdn:ReferenceValueSets/sdn:FeatureTypeValues"
         f"/*[.='{feature_type_text(asset)}']",
-        NAMESPACE
+        NAMESPACE,
     )
     if feature_type is None:
         raise LookupError(
@@ -99,10 +99,9 @@ def get_address_id(root, asset):
 
 def get_sanctioned_addresses(root, address_id):
     """returns a list of sanctioned addresses for the given address_id"""
-    addresses = list()
+    addresses = []
     for feature in root.findall(
-        f"sdn:DistinctParties//*[@FeatureTypeID='{address_id}']",
-        NAMESPACE
+        f"sdn:DistinctParties//*[@FeatureTypeID='{address_id}']", NAMESPACE
     ):
         for version_detail in feature.findall(".//sdn:VersionDetail", NAMESPACE):
             addresses.append(version_detail.text)
@@ -117,13 +116,13 @@ def write_addresses(addresses, asset, output_formats, outpath):
 
 
 def write_addresses_txt(addresses, asset, outpath):
-    with open(f"{outpath}/sanctioned_addresses_{asset}.txt", 'w') as out:
+    with open(f"{outpath}/sanctioned_addresses_{asset}.txt", "w") as out:
         for address in addresses:
             out.write(address + "\n")
 
 
 def write_addresses_json(addresses, asset, outpath):
-    with open(f"{outpath}/sanctioned_addresses_{asset}.json", 'w') as out:
+    with open(f"{outpath}/sanctioned_addresses_{asset}.json", "w") as out:
         out.write(json.dumps(addresses, indent=2) + "\n")
 
 
@@ -157,7 +156,7 @@ def main():
     tree = ET.parse(args.sdn)
     root = tree.getroot()
 
-    assets = list()
+    assets = []
     if isinstance(args.format, str):
         assets.append(args.assets)
     else:
@@ -166,7 +165,7 @@ def main():
     if len(assets) == 0:
         assets = get_possible_assets(root)
 
-    output_formats = list()
+    output_formats = []
     if isinstance(args.format, str):
         output_formats.append(args.format)
     else:
