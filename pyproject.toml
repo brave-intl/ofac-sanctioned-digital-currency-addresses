@@ -52,9 +52,8 @@ exclude_dirs = ["tests", "tmp", "data"]
 skips = ["B404", "B603", "B607"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["."]
 python_files = ["test_*.py"]
-addopts = "--cov=. --cov-report=term-missing --cov-report=html"
 
 [tool.vulture]
 exclude = ["tests/", "tmp/", "data/"]
