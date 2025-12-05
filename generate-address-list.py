@@ -10,12 +10,6 @@ from ofac_scraper import OfacWebsiteScraper
 FEATURE_TYPE_TEXT = "Digital Currency Address - "
 NAMESPACE = {'sdn': 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML'}
 
-# List of assets that have been sanctioned by the OFAC.
-# Possible assets be seen by grepping the sdn_advanced.xml file for "Digital Currency Address".
-POSSIBLE_ASSETS = ["XBT", "ETH", "XMR", "LTC", "ZEC", "DASH", "BTG", "ETC",
-                   "BSV", "BCH", "XVG", "USDT", "XRP", "ARB", "BSC", "USDC",
-                   "TRX"]
-
 # List of implemented output formats
 OUTPUT_FORMATS = ["TXT", "JSON"]
 
@@ -129,6 +123,19 @@ def main():
         output_formats.append(args.format)
     else:
         output_formats = args.format
+
+    # Delete old output files to ensure removed addresses/assets are cleaned up
+    # This loop handles the case where an asset is completely removed from OFAC list
+    for fmt in output_formats:
+        if fmt == "TXT":
+            pattern = "sanctioned_addresses_*.txt"
+        elif fmt == "JSON":
+            pattern = "sanctioned_addresses_*.json"
+        else:
+            continue
+
+        for old_file in args.outpath.glob(pattern):
+            old_file.unlink()
 
     for asset in assets:
         address_id = get_address_id(root, asset)

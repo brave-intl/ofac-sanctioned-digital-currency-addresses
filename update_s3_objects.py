@@ -196,32 +196,29 @@ def process_action_chunk(action_chunk, bucket, prefix, dry_run, s3_client):
     }
 
     for action in action_chunk:
-        created = False
-        removed = False
+        success = False
+        error = None
+
         match action['action']:
             case 'add':
-                created, error = create_s3_object(
-                    action['address'],
-                    bucket,
-                    prefix,
-                    dry_run,
-                    s3_client
+                success, error = create_s3_object(
+                    action['address'], bucket, prefix, dry_run, s3_client
                 )
+                if success:
+                    results['created'] += 1
+                else:
+                    results['errors'] += 1
+                    if error: logger.error(error)
             case 'remove':
-                removed, error = delete_s3_object(
-                    action['address'],
-                    bucket,
-                    prefix,
-                    dry_run,
-                    s3_client
+                success, error = delete_s3_object(
+                    action['address'], bucket, prefix, dry_run, s3_client
                 )
-        if created:
-            results['created'] += 1
-        if removed:
-            results['removed'] += 1
-        else:
-            results['errors'] += 1
-            logger.error(error)
+                if success:
+                    results['removed'] += 1
+                else:
+                    results['errors'] += 1
+                    if error:
+                        logger.error(error)
 
     return results
 
@@ -326,28 +323,31 @@ def main():
     s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket(args.bucket)
 
-    # Read sanctioned addresses
     sdn_addresses = read_sanctioned_addresses(args.directory)
-    s3_addresses = [decode(obj.key.replace(OBJECT_PREFIX, "")) for obj in bucket.objects.all()]
+    s3_addresses = [
+        decode(obj.key.replace(OBJECT_PREFIX, ""))
+        for obj in bucket.objects.all()
+    ]
 
-    if not sdn_addresses:
-        logger.error("No addresses found in SDN list. Exiting.")
-        return
+    # If SDN is empty, this will generate 'remove' actions for all S3 objects
     actions = generate_actions(sdn_addresses, s3_addresses)
+    # Safety check - but allow it to proceed if SDN is legitimately empty
     remove_count = sum(1 for a in actions if a['action'] == 'remove')
     total_count = len(s3_addresses)
-    percent_removed = (remove_count / total_count) * 100
-    if percent_removed > 15:
-        # Only manual runs by whitelisted actors can bypass the 15% limit
-        if os.getenv('GITHUB_ACTOR') not in ["mrose17", "Sneagan", "mschfh"]:
-            logger.error("Too many addresses are set to be removed. Human "
-                         f'review required.\nTotal addresses: {total_count}\n'
-                         f'Addresses to remove: {remove_count}')
-            raise Exception("Too many addresses are set to be removed. Human "
-                            f'review required.\nTotal addresses: {total_count}'
-                            f'\nAddresses to remove: {remove_count}')
 
-    # Create S3 objects
+    if total_count > 0:
+        percent_removed = (remove_count / total_count) * 100
+        if percent_removed > 15:
+            # Only manual runs by whitelisted actors can bypass the 15% limit
+            if os.getenv('GITHUB_ACTOR') not in ["mrose17", "Sneagan", "mschfh"]:
+                logger.error("Too many addresses are set to be removed. Human "
+                             f'review required.\nTotal addresses: {total_count}\n'
+                             f'Addresses to remove: {remove_count}')
+                raise Exception("Too many addresses are set to be removed. Human "
+                                f'review required.\nTotal addresses: {total_count}'
+                                f'\nAddresses to remove: {remove_count}')
+
+    # Create/delete S3 objects
     result = reconcile_s3(
         actions=actions,
         bucket=args.bucket,
