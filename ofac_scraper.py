@@ -1,14 +1,13 @@
-import logging
 import time
+
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 class OfacWebsiteScraper:
@@ -29,19 +28,20 @@ class OfacWebsiteScraper:
 
     def wait_for_element(self, by, value, timeout=30):
         return WebDriverWait(self.driver, timeout).until(
-            EC.presence_of_element_located((by, value))
+            ec.presence_of_element_located((by, value))
         )
 
     def get_element_text(self, by, value):
         return self.driver.find_element(by, value).text
 
     def get_sha256_checksum(self):
-        MAX_RETRIES = 10
-        RETRY_DELAY = 10  # seconds to wait before retrying
+        max_retries = 10
+        retry_delay = 10
 
-        for attempt in range(MAX_RETRIES):
+        for attempt in range(max_retries):
             print(
-                f"Attempting to get SHA-256 checksum (attempt {attempt + 1}/{MAX_RETRIES})..."
+                f"Attempting to get SHA-256 checksum (attempt"
+                f" {attempt + 1}/{max_retries})..."
             )
             try:
                 self.open_website("https://sanctionslist.ofac.treas.gov/Home/SdnList")
@@ -53,7 +53,9 @@ class OfacWebsiteScraper:
 
                 # Scroll to (waiting for animation) and Click the 'File
                 # Signatures' button with the known ID
-                header_element = self.driver.find_element(By.ID, "accordion__heading-:r1:")
+                header_element = self.driver.find_element(
+                    By.ID, "accordion__heading-:r1:"
+                )
                 ActionChains(self.driver).move_to_element(header_element).perform()
                 time.sleep(1)
                 header_element.click()
@@ -76,15 +78,16 @@ class OfacWebsiteScraper:
                 sha256_checksum = checksums_content.split("SHA-256: ")[1].split("\n")[0]
                 return sha256_checksum
 
-            except TimeoutException:
+            except TimeoutException as e:
                 print(
-                    f"Timeout occurred on attempt {attempt + 1}/{MAX_RETRIES}. Retrying in {RETRY_DELAY} seconds..."
+                    f"Timeout occurred on attempt {attempt + 1}/{max_retries}. "
+                    f"Retrying in {retry_delay} seconds..."
                 )
-                time.sleep(RETRY_DELAY)
-                if attempt == MAX_RETRIES - 1:
+                time.sleep(retry_delay)
+                if attempt == max_retries - 1:
                     raise TimeoutException(
                         "Max retries reached. The website is not responding."
-                    )
+                    ) from e
 
     def close(self):
         self.driver.quit()
