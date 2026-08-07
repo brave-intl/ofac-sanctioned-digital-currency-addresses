@@ -15,6 +15,7 @@ from update_s3_objects import (
     decode,
     delete_s3_object,
     encode,
+    expand_addresses,
     format_result_message,
     generate_actions,
     process_action_chunk,
@@ -99,6 +100,68 @@ class TestAddressEncoding(unittest.TestCase):
             encoded = encode(original)
             decoded = decode(encoded)
             self.assertEqual(decoded, original)
+
+
+class TestExpandAddresses(unittest.TestCase):
+    """
+    Test that EVM addresses gain a lowercase variant while everything else
+    passes through untouched
+    """
+
+    def test_checksummed_evm_address_adds_lowercase(self):
+        """An EIP-55 checksummed address yields itself plus its lowercase"""
+        checksummed = "0x7F367cC41522cE07553e823bf3be79A889DEbe1B"
+        result = expand_addresses({checksummed})
+        self.assertEqual(result, {checksummed, checksummed.lower()})
+
+    def test_lowercase_evm_address_unchanged(self):
+        """An already-lowercase EVM address yields only itself"""
+        lowercase = "0x7f367cc41522ce07553e823bf3be79a889debe1b"
+        result = expand_addresses({lowercase})
+        self.assertEqual(result, {lowercase})
+
+    def test_non_evm_addresses_unchanged(self):
+        """Case-sensitive chains (BTC, TRX, SOL, XRP, ...) are not lowercased"""
+        addresses = {
+            "12QtD5BFwRsdNsAZY76UVE1xyCGNTojH9h",  # BTC
+            "TVacWx7F5wgMgn49L5frDf9KLgdYy8nPHL",  # TRX
+            "rGDreBvnHrX1get7na3J4oowN19ny4GzFn",  # XRP
+            "t1WSKwCDL1QYRRUrCCknEs5tDLhtGVYu9KM",  # ZEC
+        }
+        result = expand_addresses(addresses)
+        self.assertEqual(result, addresses)
+
+    def test_mixed_set(self):
+        """Only the EVM addresses in a mixed set are expanded"""
+        btc = "12QtD5BFwRsdNsAZY76UVE1xyCGNTojH9h"
+        eth = "0x7F367cC41522cE07553e823bf3be79A889DEbe1B"
+        result = expand_addresses({btc, eth})
+        self.assertEqual(result, {btc, eth, eth.lower()})
+
+    def test_first_run_backfills_and_keeps_existing_objects(self):
+        """
+        Simulate the first run after deploy: S3 already holds checksummed
+        objects from previous runs. The expanded true set must produce ONLY
+        add actions for the lowercase twins — no removals of existing keys.
+        """
+        checksummed = "0x7F367cC41522cE07553e823bf3be79A889DEbe1B"
+        btc = "12QtD5BFwRsdNsAZY76UVE1xyCGNTojH9h"
+        existing_s3 = [checksummed, btc]  # state written by the old code
+        actions = generate_actions(expand_addresses({checksummed, btc}), existing_s3)
+        self.assertEqual(
+            actions, [{"action": "add", "address": checksummed.lower()}]
+        )
+
+    def test_delisted_address_removes_both_forms(self):
+        """
+        Once an address leaves the SDN, both its checksummed and lowercase
+        objects are removed on the next run.
+        """
+        checksummed = "0x7F367cC41522cE07553e823bf3be79A889DEbe1B"
+        existing_s3 = [checksummed, checksummed.lower()]
+        actions = generate_actions(expand_addresses(set()), existing_s3)
+        removed = {a["address"] for a in actions if a["action"] == "remove"}
+        self.assertEqual(removed, {checksummed, checksummed.lower()})
 
 
 class TestGenerateActions(unittest.TestCase):

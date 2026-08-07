@@ -7,6 +7,7 @@ import glob
 import json
 import logging
 import os
+import re
 import threading
 from io import BytesIO
 
@@ -73,6 +74,22 @@ def decode(address):
     padding = "=" * ((4 - len(address) % 4) % 4)
     padded_address = address + padding
     return base64.urlsafe_b64decode(padded_address).decode()
+
+
+# EVM addresses (ETH, ETC, ARB, BSC, ...) are case-insensitive; OFAC publishes
+# a mix of lowercase and EIP-55 checksummed forms
+EVM_ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
+
+
+def expand_addresses(addresses):
+    """
+    Return the address set plus a lowercase variant of every EVM address, so
+    clients can screen case-insensitively by looking up the lowercase form.
+    Original casing is kept so existing clients keep working.
+    """
+    expanded = set(addresses)
+    expanded.update(a.lower() for a in addresses if EVM_ADDRESS_RE.match(a))
+    return expanded
 
 
 def generate_actions(true_list, mirror_list):
@@ -327,7 +344,7 @@ def main():
     s3_resource = boto3.resource("s3")
     bucket = s3_resource.Bucket(args.bucket)
 
-    sdn_addresses = read_sanctioned_addresses(args.directory)
+    sdn_addresses = expand_addresses(read_sanctioned_addresses(args.directory))
     s3_addresses = [
         decode(obj.key.replace(OBJECT_PREFIX, "")) for obj in bucket.objects.all()
     ]
