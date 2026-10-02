@@ -1,10 +1,11 @@
-# This workflow will generate and update the lists in the 'lists' branch each night at 0 UTC
+# This workflow will generate and update the lists in the 'lists' branch twice daily, at 2 and 14 UTC
 
-name: Generate OFAC sanctioned digital currency addresses lists each night at 2 UTC
+name: Generate OFAC sanctioned digital currency addresses lists twice daily at 2 and 14 UTC
 
 on:
   schedule:
     - cron: '0 2 * * *'
+    - cron: '0 14 * * *'
   workflow_dispatch:
 
 jobs:
