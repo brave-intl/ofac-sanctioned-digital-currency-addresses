@@ -28,13 +28,7 @@ jobs:
         python-version: 3.11
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y wget gnupg
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor --yes -o /usr/share/keyrings/google-chrome.gpg
-        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable chromium-chromedriver
-        pip install selenium webdriver-manager boto3
+        pip install selenium boto3
     - name: Download the sdn_advanced.xml file
       run: |
         wget --tries=5 --wait=60 --retry-on-http-error=403 https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
